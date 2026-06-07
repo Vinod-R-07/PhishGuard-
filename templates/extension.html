@@ -1,0 +1,188 @@
+{% extends 'base.html' %}
+{% block title %}PhishGuard — Browser Extension{% endblock %}
+{% block content %}
+<div class="page-header">
+  <h1>Browser Extension</h1>
+  <p class="subtitle">How PhishGuard would work as a Chrome/Edge browser extension</p>
+</div>
+
+<div class="ext-hero">
+  <div class="ext-concept-badge">Concept Design</div>
+  <h2>PhishGuard for Chrome</h2>
+  <p>A browser extension that automatically scans every website you visit and warns you before you interact with a phishing page.</p>
+</div>
+
+<div class="ext-mockup">
+  <div class="browser-bar">
+    <div class="browser-dots"><span></span><span></span><span></span></div>
+    <div class="browser-url">
+      <span class="url-icon">🔒</span>
+      <span id="mockUrl">https://paypal-secure-login.suspicious.com/verify</span>
+    </div>
+    <div class="ext-icon-area">
+      <div class="ext-icon danger-ext" id="extIcon">⬡</div>
+    </div>
+  </div>
+  <div class="browser-body">
+    <div class="ext-popup" id="extPopup">
+      <div class="popup-header danger-popup">
+        <span class="popup-icon">☠️</span>
+        <div>
+          <div class="popup-title">Phishing Detected</div>
+          <div class="popup-sub">PhishGuard has blocked this page</div>
+        </div>
+      </div>
+      <div class="popup-url">paypal-secure-login.suspicious.com</div>
+      <div class="popup-conf">
+        <span>Confidence</span>
+        <span class="popup-conf-val">94.2%</span>
+      </div>
+      <div class="popup-bar-track">
+        <div class="popup-bar-fill danger-bar" style="width:94.2%"></div>
+      </div>
+      <div class="popup-flags">
+        <div class="popup-flag">✗ IP-based redirect</div>
+        <div class="popup-flag">✗ Domain age &lt; 30 days</div>
+        <div class="popup-flag">✗ No DNS record</div>
+        <div class="popup-flag">✗ SSL certificate mismatch</div>
+      </div>
+      <div class="popup-actions">
+        <button class="popup-btn-danger">Block Page</button>
+        <button class="popup-btn-ghost" onclick="toggleSafe()">Proceed Anyway</button>
+      </div>
+    </div>
+    <div class="fake-page" id="fakePage">
+      <div class="fake-paypal">
+        <div class="fake-logo">PayPal</div>
+        <div class="fake-form">
+          <div class="fake-input"></div>
+          <div class="fake-input"></div>
+          <div class="fake-btn"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="demo-switcher">
+  <p style="color:var(--muted);font-size:13px;margin-bottom:12px;">Try the demo:</p>
+  <div style="display:flex;gap:8px;flex-wrap:wrap;">
+    <button onclick="showSite('phishing')" class="filter-btn active" id="d-phishing">☠ Phishing Site</button>
+    <button onclick="showSite('safe')" class="filter-btn" id="d-safe">🛡 Safe Site</button>
+    <button onclick="showSite('warning')" class="filter-btn" id="d-warning">⚠ Suspicious Site</button>
+  </div>
+</div>
+
+<div class="section-block" style="margin-top:40px;">
+  <h2 class="section-head-plain">How It Would Work</h2>
+  <div class="how-steps">
+    <div class="how-step">
+      <div class="how-num">01</div>
+      <h3>Page Load Intercept</h3>
+      <p>Extension intercepts every navigation event using Chrome's <code>webNavigation</code> API before the page fully loads.</p>
+    </div>
+    <div class="how-step">
+      <div class="how-num">02</div>
+      <h3>Feature Extraction</h3>
+      <p>URL-based features (length, IP, symbols, subdomains) are extracted instantly in the browser without a server round-trip.</p>
+    </div>
+    <div class="how-step">
+      <div class="how-num">03</div>
+      <h3>API Call to PhishGuard</h3>
+      <p>The extension sends the URL to <code>POST /api/scan</code> and receives a JSON prediction with confidence score in milliseconds.</p>
+    </div>
+    <div class="how-step">
+      <div class="how-num">04</div>
+      <h3>Warning or Pass</h3>
+      <p>If phishing is detected, the extension injects a warning overlay. Safe sites get a green badge. User can override if needed.</p>
+    </div>
+  </div>
+</div>
+
+<div class="section-block">
+  <h2 class="section-head-plain">Extension Architecture</h2>
+  <div class="arch-steps" style="flex-wrap:wrap;">
+    <div class="arch-step"><span class="arch-num">manifest.json</span><span class="arch-label">Extension config & permissions</span></div>
+    <div class="arch-arrow">→</div>
+    <div class="arch-step"><span class="arch-num">background.js</span><span class="arch-label">Listens for tab navigation</span></div>
+    <div class="arch-arrow">→</div>
+    <div class="arch-step"><span class="arch-num">content.js</span><span class="arch-label">Injects warning overlay</span></div>
+    <div class="arch-arrow">→</div>
+    <div class="arch-step"><span class="arch-num">PhishGuard API</span><span class="arch-label">Returns ML prediction</span></div>
+  </div>
+</div>
+
+<script>
+function showSite(type) {
+  ['phishing','safe','warning'].forEach(t => document.getElementById('d-'+t).classList.remove('active'));
+  document.getElementById('d-'+type).classList.add('active');
+  const popup = document.getElementById('extPopup');
+  const icon = document.getElementById('extIcon');
+  const urlEl = document.getElementById('mockUrl');
+
+  if (type === 'phishing') {
+    urlEl.textContent = 'https://paypal-secure-login.suspicious.com/verify';
+    icon.className = 'ext-icon danger-ext';
+    icon.textContent = '⬡';
+    popup.style.display = 'block';
+    popup.innerHTML = `
+      <div class="popup-header danger-popup">
+        <span class="popup-icon">☠️</span>
+        <div><div class="popup-title">Phishing Detected</div><div class="popup-sub">PhishGuard has blocked this page</div></div>
+      </div>
+      <div class="popup-url">paypal-secure-login.suspicious.com</div>
+      <div class="popup-conf"><span>Confidence</span><span class="popup-conf-val">94.2%</span></div>
+      <div class="popup-bar-track"><div class="popup-bar-fill danger-bar" style="width:94.2%"></div></div>
+      <div class="popup-flags">
+        <div class="popup-flag">✗ Prefix/suffix dash in domain</div>
+        <div class="popup-flag">✗ Domain age &lt; 30 days</div>
+        <div class="popup-flag">✗ No DNS record found</div>
+        <div class="popup-flag">✗ SSL certificate mismatch</div>
+      </div>
+      <div class="popup-actions">
+        <button class="popup-btn-danger">Block Page</button>
+        <button class="popup-btn-ghost" onclick="toggleSafe()">Proceed Anyway</button>
+      </div>`;
+  } else if (type === 'safe') {
+    urlEl.textContent = 'https://github.com/dashboard';
+    icon.className = 'ext-icon safe-ext';
+    popup.style.display = 'block';
+    popup.innerHTML = `
+      <div class="popup-header safe-popup">
+        <span class="popup-icon">🛡️</span>
+        <div><div class="popup-title">Site is Safe</div><div class="popup-sub">No threats detected</div></div>
+      </div>
+      <div class="popup-url">github.com</div>
+      <div class="popup-conf"><span>Safe Confidence</span><span class="popup-conf-val" style="color:var(--safe)">97.8%</span></div>
+      <div class="popup-bar-track"><div class="popup-bar-fill" style="width:97.8%;background:var(--safe)"></div></div>
+      <div class="popup-flags" style="color:var(--safe)">
+        <div class="popup-flag" style="color:var(--safe)">✓ Valid SSL certificate</div>
+        <div class="popup-flag" style="color:var(--safe)">✓ Domain age &gt; 5 years</div>
+        <div class="popup-flag" style="color:var(--safe)">✓ DNS record verified</div>
+        <div class="popup-flag" style="color:var(--safe)">✓ Google indexed</div>
+      </div>`;
+  } else {
+    urlEl.textContent = 'http://free-gift-cards-now.xyz/claim';
+    icon.className = 'ext-icon warn-ext';
+    popup.style.display = 'block';
+    popup.innerHTML = `
+      <div class="popup-header warn-popup">
+        <span class="popup-icon">⚠️</span>
+        <div><div class="popup-title">Suspicious Site</div><div class="popup-sub">Proceed with caution</div></div>
+      </div>
+      <div class="popup-url">free-gift-cards-now.xyz</div>
+      <div class="popup-conf"><span>Risk Confidence</span><span class="popup-conf-val" style="color:var(--neutral)">61.4%</span></div>
+      <div class="popup-bar-track"><div class="popup-bar-fill" style="width:61.4%;background:var(--neutral)"></div></div>
+      <div class="popup-flags">
+        <div class="popup-flag" style="color:var(--neutral)">⚠ Non-standard TLD (.xyz)</div>
+        <div class="popup-flag" style="color:var(--neutral)">⚠ Low web traffic ranking</div>
+        <div class="popup-flag" style="color:var(--safe)">✓ SSL certificate present</div>
+      </div>`;
+  }
+}
+
+function toggleSafe() {
+  document.getElementById('extPopup').style.display = 'none';
+}
+</script>
+{% endblock %}

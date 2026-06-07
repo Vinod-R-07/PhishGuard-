@@ -1,0 +1,68 @@
+{% extends 'base.html' %}
+{% block title %}PhishGuard — URL Scanner{% endblock %}
+{% block content %}
+<div class="hero">
+  <div class="hero-tag">AI-Based Phishing Detection · Random Forest · 30 Features</div>
+  <h1>Is this website<br><span class="accent">safe or a threat?</span></h1>
+  <p class="subtitle">Real-time URL analysis using machine learning trained on the UCI Phishing Websites Dataset.</p>
+</div>
+
+<div class="scan-card">
+  {% if error %}
+  <div class="error-bar">⚠ {{ error }}</div>
+  {% endif %}
+  <form action="/predict" method="POST" id="scanForm">
+    <div class="input-row">
+      <div class="input-wrap">
+        <span class="input-icon">🔗</span>
+        <input type="text" name="url" placeholder="Enter URL  e.g. google.com or paypal-login.suspicious.com" autocomplete="off" required>
+      </div>
+      <button type="submit" id="scanBtn">
+        <span class="btn-text">Scan</span>
+        <span>→</span>
+      </button>
+    </div>
+  </form>
+
+  <div class="loading-overlay" id="loadingOverlay">
+    <div class="scan-anim">
+      <div class="ring"></div><div class="ring r2"></div><div class="ring r3"></div>
+    </div>
+    <div class="scan-steps">
+      <div class="step" id="s1">⬡ Connecting to host</div>
+      <div class="step" id="s2">⬡ Querying DNS &amp; WHOIS</div>
+      <div class="step" id="s3">⬡ Inspecting SSL &amp; headers</div>
+      <div class="step" id="s4">⬡ Running Random Forest</div>
+    </div>
+  </div>
+</div>
+
+<div class="stats-row">
+  <div class="stat-box">
+    <span class="stat-num">{{ stats.total }}</span>
+    <span class="stat-label">Total Scans</span>
+  </div>
+  <div class="stat-box danger-stat">
+    <span class="stat-num">{{ stats.phishing }}</span>
+    <span class="stat-label">Phishing Detected</span>
+  </div>
+  <div class="stat-box safe-stat">
+    <span class="stat-num">{{ stats.legitimate }}</span>
+    <span class="stat-label">Legitimate Sites</span>
+  </div>
+  <div class="stat-box">
+    <span class="stat-num">96%</span>
+    <span class="stat-label">Model Accuracy</span>
+  </div>
+</div>
+
+<script>
+const form = document.getElementById('scanForm');
+const overlay = document.getElementById('loadingOverlay');
+form.addEventListener('submit', () => {
+  overlay.classList.add('active');
+  ['s1','s2','s3','s4'].forEach((id, i) =>
+    setTimeout(() => document.getElementById(id).classList.add('active'), i * 900));
+});
+</script>
+{% endblock %}

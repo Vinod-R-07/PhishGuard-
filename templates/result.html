@@ -1,0 +1,82 @@
+{% extends 'base.html' %}
+{% block title %}PhishGuard — Result{% endblock %}
+{% block content %}
+
+<div class="result-hero {{ 'hero-safe' if not is_phishing else 'hero-danger' }}">
+  <div class="result-icon-big">{{ '🛡️' if not is_phishing else '☠️' }}</div>
+  <div class="verdict-text">{{ 'SAFE' if not is_phishing else 'THREAT DETECTED' }}</div>
+  <div class="result-url-display">{{ url }}</div>
+  <div class="result-ts">Scanned {{ timestamp }}</div>
+</div>
+
+{% if vt_label %}
+<div class="vt-banner {{ 'vt-danger' if vt_verdict in ['phishing', 'suspicious'] else ('vt-safe' if vt_verdict == 'clean' else 'vt-unknown') }}">
+  <span class="vt-icon">🔬</span>
+  <span class="vt-text">{{ vt_label }}</span>
+  <span class="vt-source">VirusTotal</span>
+</div>
+{% endif %}
+
+<div class="metrics-row">
+  <div class="metric-card">
+    <div class="metric-top">Confidence</div>
+    <div class="metric-val {{ 'val-safe' if not is_phishing else 'val-danger' }}">{{ confidence }}%</div>
+    <div class="conf-track"><div class="conf-fill {{ 'fill-safe' if not is_phishing else 'fill-danger' }}" style="width:{{ confidence }}%"></div></div>
+  </div>
+  <div class="metric-card">
+    <div class="metric-top">Risk Flags</div>
+    <div class="metric-val val-danger">{{ risk_count }}</div>
+    <div class="metric-sub">out of 30 features</div>
+  </div>
+  <div class="metric-card">
+    <div class="metric-top">Safe Features</div>
+    <div class="metric-val val-safe">{{ safe_count }}</div>
+    <div class="metric-sub">out of 30 features</div>
+  </div>
+  <div class="metric-card">
+    <div class="metric-top">Neutral</div>
+    <div class="metric-val val-neutral">{{ neutral_count }}</div>
+    <div class="metric-sub">out of 30 features</div>
+  </div>
+</div>
+
+<div class="section-block">
+  <div class="section-head">
+    <h2>Feature Analysis</h2>
+    <div class="legend">
+      <span class="leg safe">✓ Safe</span>
+      <span class="leg neutral">⬡ Neutral</span>
+      <span class="leg risk">✗ Risk</span>
+    </div>
+  </div>
+  <div class="feature-grid" id="featureGrid">
+    {% for f in feature_details %}
+    <div class="feat-card {{ f.status }}">
+      <span class="feat-name">{{ f.name }}</span>
+      <span class="feat-pill {{ f.status }}">
+        {{ '✓' if f.status == 'safe' else ('⬡' if f.status == 'neutral' else '✗') }}
+        {{ 'Safe' if f.status == 'safe' else ('Neutral' if f.status == 'neutral' else 'Risk') }}
+      </span>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+
+<div class="action-row">
+  <a href="/" class="btn-primary">⬡ Scan Another URL</a>
+  <a href="/history" class="btn-secondary">View History</a>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const fill = document.querySelector('.conf-fill');
+  const w = fill.style.width;
+  fill.style.width = '0';
+  setTimeout(() => { fill.style.transition = 'width 1.2s cubic-bezier(.4,0,.2,1)'; fill.style.width = w; }, 100);
+  document.querySelectorAll('.feat-card').forEach((el, i) => {
+    el.style.opacity = 0;
+    setTimeout(() => { el.style.transition = 'opacity .25s, transform .25s'; el.style.opacity = 1; el.style.transform = 'none'; }, i * 30);
+  });
+});
+</script>
+{% endblock %}

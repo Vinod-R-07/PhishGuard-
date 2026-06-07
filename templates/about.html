@@ -1,0 +1,112 @@
+{% extends 'base.html' %}
+{% block title %}PhishGuard — About{% endblock %}
+{% block content %}
+<div class="page-header">
+  <h1>About PhishGuard</h1>
+  <p class="subtitle">AI-Based Phishing Website Detection System · NPS Lab Project</p>
+</div>
+
+<div class="about-grid">
+  <div class="about-card">
+    <div class="about-icon">🎯</div>
+    <h3>Objective</h3>
+    <p>Detect phishing websites in real-time using machine learning by analyzing 30 network and URL-level security features extracted live from any given URL.</p>
+  </div>
+  <div class="about-card">
+    <div class="about-icon">📊</div>
+    <h3>Dataset</h3>
+    <p>Trained on the UCI Phishing Websites Dataset containing 11,055 website records. Each record has 30 features encoded as -1 (suspicious), 0 (neutral), or 1 (safe).</p>
+  </div>
+  <div class="about-card">
+    <div class="about-icon">🌲</div>
+    <h3>Model</h3>
+    <p>Random Forest Classifier with 100 decision trees. Achieves ~96–97% accuracy with stratified train/test split. Uses ensemble voting to reduce false positives.</p>
+  </div>
+  <div class="about-card">
+    <div class="about-icon">🌐</div>
+    <h3>Network Analysis</h3>
+    <p>Live HTTP requests, DNS/WHOIS queries, SSL certificate checks, redirect chain analysis, and anchor/form inspection are performed for every scanned URL.</p>
+  </div>
+</div>
+
+<div class="section-block">
+  <h2 class="section-head-plain">30 Security Features</h2>
+  <div class="features-about">
+    <div class="feat-group">
+      <div class="feat-group-title">URL-Based (8)</div>
+      <ul>
+        <li>IP address in URL</li>
+        <li>URL length</li>
+        <li>URL shortening service</li>
+        <li>@ symbol in URL</li>
+        <li>Double slash redirect</li>
+        <li>Prefix/suffix dash</li>
+        <li>Subdomain depth</li>
+        <li>HTTPS token in domain</li>
+      </ul>
+    </div>
+    <div class="feat-group">
+      <div class="feat-group-title">Domain-Based (6)</div>
+      <ul>
+        <li>SSL final state</li>
+        <li>Domain registration length</li>
+        <li>Favicon origin</li>
+        <li>Non-standard port</li>
+        <li>Domain age</li>
+        <li>DNS record exists</li>
+      </ul>
+    </div>
+    <div class="feat-group">
+      <div class="feat-group-title">Page Content (9)</div>
+      <ul>
+        <li>Request URL ratio</li>
+        <li>Anchor URL ratio</li>
+        <li>Tag link ratio</li>
+        <li>Server form handler</li>
+        <li>Email submission form</li>
+        <li>Abnormal URL</li>
+        <li>Iframe usage</li>
+        <li>Mouseover action</li>
+        <li>Right-click disabled</li>
+      </ul>
+    </div>
+    <div class="feat-group">
+      <div class="feat-group-title">External (7)</div>
+      <ul>
+        <li>Redirect count</li>
+        <li>Popup window</li>
+        <li>Web traffic rank</li>
+        <li>Page rank</li>
+        <li>Google index status</li>
+        <li>Inbound links count</li>
+        <li>Statistical report</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<div class="section-block">
+  <h2 class="section-head-plain">System Architecture</h2>
+  <div class="arch-steps">
+    <div class="arch-step"><span class="arch-num">01</span><span class="arch-label">User enters URL</span></div>
+    <div class="arch-arrow">→</div>
+    <div class="arch-step"><span class="arch-num">02</span><span class="arch-label">Feature extractor runs 30 live checks</span></div>
+    <div class="arch-arrow">→</div>
+    <div class="arch-step"><span class="arch-num">03</span><span class="arch-label">Random Forest classifies</span></div>
+    <div class="arch-arrow">→</div>
+    <div class="arch-step"><span class="arch-num">04</span><span class="arch-label">Result + confidence returned</span></div>
+  </div>
+</div>
+
+<div class="tech-stack">
+  <div class="tech-item">Python 3</div>
+  <div class="tech-item">Flask</div>
+  <div class="tech-item">scikit-learn</div>
+  <div class="tech-item">Random Forest</div>
+  <div class="tech-item">SQLite</div>
+  <div class="tech-item">BeautifulSoup4</div>
+  <div class="tech-item">python-whois</div>
+  <div class="tech-item">tldextract</div>
+  <div class="tech-item">fpdf2</div>
+</div>
+{% endblock %}

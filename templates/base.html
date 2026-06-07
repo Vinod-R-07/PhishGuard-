@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}PhishGuard{% endblock %}</title>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <div class="bg-grid"></div>
+  <nav class="navbar">
+    <a href="/" class="logo"><span class="logo-icon">⬡</span> PhishGuard</a>
+    <div class="nav-links">
+  <a href="/" class="nav-link {% if request.path == '/' %}active{% endif %}">Scanner</a>
+  <a href="/bulk" class="nav-link {% if request.path == '/bulk' or request.path == '/bulk/scan' %}active{% endif %}">Bulk Scan</a>
+  <a href="/threats" class="nav-link {% if request.path == '/threats' %}active{% endif %}">Threat Feed</a>
+  <a href="/history" class="nav-link {% if request.path == '/history' %}active{% endif %}">History</a>
+  <a href="/extension" class="nav-link {% if request.path == '/extension' %}active{% endif %}">Extension</a>
+  <a href="/about" class="nav-link {% if request.path == '/about' %}active{% endif %}">About</a>
+</div>
+  </nav>
+  <div class="page-wrap">
+    {% block content %}{% endblock %}
+  </div>
+</body>
+</html>

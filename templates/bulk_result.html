@@ -1,0 +1,103 @@
+{% extends 'base.html' %}
+{% block title %}PhishGuard — Bulk Results{% endblock %}
+{% block content %}
+<div class="page-header">
+  <h1>Bulk Scan Results</h1>
+  <p class="subtitle">{{ total }} URLs scanned</p>
+</div>
+
+<div class="stats-row">
+  <div class="stat-box">
+    <span class="stat-num">{{ total }}</span>
+    <span class="stat-label">URLs Scanned</span>
+  </div>
+  <div class="stat-box danger-stat">
+    <span class="stat-num">{{ phishing_count }}</span>
+    <span class="stat-label">Phishing</span>
+  </div>
+  <div class="stat-box safe-stat">
+    <span class="stat-num">{{ legit_count }}</span>
+    <span class="stat-label">Legitimate</span>
+  </div>
+  <div class="stat-box">
+    {% if total > 0 %}
+    <span class="stat-num">{{ ((phishing_count / total) * 100) | round(1) }}%</span>
+    {% else %}
+    <span class="stat-num">0%</span>
+    {% endif %}
+    <span class="stat-label">Threat Rate</span>
+  </div>
+</div>
+
+<div class="section-block">
+  <div class="section-head">
+    <h2>Results Table</h2>
+    <div style="display:flex;gap:8px;">
+      <button onclick="filterResults('all')" class="filter-btn active" id="f-all">All</button>
+      <button onclick="filterResults('Phishing')" class="filter-btn danger-filter" id="f-phishing">Phishing Only</button>
+      <button onclick="filterResults('Legitimate')" class="filter-btn safe-filter" id="f-legit">Safe Only</button>
+    </div>
+  </div>
+
+  <div class="history-table-wrap">
+    <table class="history-table" id="resultsTable">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>URL</th>
+          <th>Result</th>
+          <th>Confidence</th>
+          <th>Risk Flags</th>
+          <th>Safe Features</th>
+          <th>Threat Bar</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for r in results %}
+        <tr class="result-row" data-result="{{ r.result }}">
+          <td class="td-id">{{ loop.index }}</td>
+          <td class="td-url" title="{{ r.url }}">{{ r.url }}</td>
+          <td>
+            <span class="result-pill {{ 'pill-danger' if r.result == 'Phishing' else ('pill-safe' if r.result == 'Legitimate' else 'pill-neutral') }}">
+              {{ '☠ Phishing' if r.result == 'Phishing' else ('🛡 Legitimate' if r.result == 'Legitimate' else '⚠ Error') }}
+            </span>
+          </td>
+          <td>{{ r.confidence }}%</td>
+          <td class="{{ 'td-risk' if r.risk_count > 5 else '' }}">{{ r.risk_count }}</td>
+          <td>{{ r.safe_count }}</td>
+          <td>
+            <div class="mini-bar-track">
+              <div class="mini-bar {{ 'mini-danger' if r.result == 'Phishing' else 'mini-safe' }}"
+                   style="width:{{ r.confidence }}%"></div>
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div class="action-row">
+  <a href="/bulk" class="btn-primary">⬡ Scan More URLs</a>
+  <a href="/history" class="btn-secondary">View Full History</a>
+</div>
+
+<script>
+function filterResults(type) {
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('f-' + (type === 'all' ? 'all' : type === 'Phishing' ? 'phishing' : 'legit')).classList.add('active');
+  document.querySelectorAll('.result-row').forEach(row => {
+    row.style.display = (type === 'all' || row.dataset.result === type) ? '' : 'none';
+  });
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  document.querySelectorAll('.mini-bar').forEach(b => {
+    const w = b.style.width;
+    b.style.width = '0';
+    setTimeout(() => { b.style.transition = 'width 0.8s ease'; b.style.width = w; }, 200);
+  });
+});
+</script>
+{% endblock %}

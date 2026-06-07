@@ -1,0 +1,80 @@
+{% extends 'base.html' %}
+{% block title %}PhishGuard — Bulk Scanner{% endblock %}
+{% block content %}
+<div class="page-header">
+  <h1>Bulk URL Scanner</h1>
+  <p class="subtitle">Paste up to 20 URLs (one per line) and scan them all at once.</p>
+</div>
+
+<div class="scan-card">
+  <form action="/bulk/scan" method="POST" id="bulkForm">
+    <div class="bulk-input-wrap">
+      <textarea name="urls" id="urlsInput" placeholder="https://google.com&#10;https://paypal-login.suspicious.com&#10;https://amazon.com&#10;..." rows="10" required></textarea>
+      <div class="bulk-meta" id="bulkMeta">0 URLs entered · max 20</div>
+    </div>
+    <div class="bulk-actions">
+      <button type="submit" id="bulkBtn">
+        <span>⬡ Scan All URLs</span>
+      </button>
+      <button type="button" onclick="loadSample()" class="btn-ghost">Load sample URLs</button>
+      <button type="button" onclick="document.getElementById('urlsInput').value=''; updateCount();" class="btn-ghost">Clear</button>
+    </div>
+  </form>
+
+  <div class="loading-overlay" id="loadingOverlay">
+    <div class="scan-anim">
+      <div class="ring"></div><div class="ring r2"></div><div class="ring r3"></div>
+    </div>
+    <div class="scan-steps">
+      <div class="step active" id="s1">⬡ Scanning URLs in sequence</div>
+      <div class="step" id="s2">⬡ Extracting network features</div>
+      <div class="step" id="s3">⬡ Running ML classifier</div>
+      <div class="step" id="s4">⬡ Compiling results</div>
+    </div>
+  </div>
+</div>
+
+<div class="info-cards">
+  <div class="info-card">
+    <div class="info-icon">📋</div>
+    <h3>One URL per line</h3>
+    <p>Paste or type each URL on a separate line. Both http:// and plain domain formats work.</p>
+  </div>
+  <div class="info-card">
+    <div class="info-icon">⚡</div>
+    <h3>Up to 20 URLs</h3>
+    <p>Each URL is analyzed with all 30 security features. Results are shown in a sortable table.</p>
+  </div>
+  <div class="info-card">
+    <div class="info-icon">💾</div>
+    <h3>Auto-saved</h3>
+    <p>All scanned URLs are automatically saved to the scan history database.</p>
+  </div>
+</div>
+
+<script>
+const samples = [
+  'google.com', 'github.com', 'paypal-secure-login.com',
+  'amazon.com', 'bit.ly/freeprize', 'netflix.com',
+  'microsoft-account-alert.ml', 'stackoverflow.com'
+];
+
+function updateCount() {
+  const lines = document.getElementById('urlsInput').value.split('\n').filter(l => l.trim()).length;
+  document.getElementById('bulkMeta').textContent = `${Math.min(lines,20)} URLs entered · max 20`;
+}
+
+function loadSample() {
+  document.getElementById('urlsInput').value = samples.join('\n');
+  updateCount();
+}
+
+document.getElementById('urlsInput').addEventListener('input', updateCount);
+
+document.getElementById('bulkForm').addEventListener('submit', () => {
+  document.getElementById('loadingOverlay').classList.add('active');
+  ['s1','s2','s3','s4'].forEach((id, i) =>
+    setTimeout(() => document.getElementById(id).classList.add('active'), i * 1200));
+});
+</script>
+{% endblock %}

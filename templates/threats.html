@@ -1,0 +1,138 @@
+{% extends 'base.html' %}
+{% block title %}PhishGuard — Live Threat Feed{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
+    <div>
+      <h1>Live Threat Feed</h1>
+      <p class="subtitle">Real-time phishing URLs sourced from OpenPhish public feed</p>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px;">
+      <div class="live-dot"></div>
+      <span style="font-size:12px;color:var(--muted);font-family:var(--font-head);">LIVE</span>
+      <button onclick="loadFeed()" class="btn-secondary" style="padding:8px 16px;font-size:13px;">↻ Refresh</button>
+    </div>
+  </div>
+</div>
+
+<div class="threat-stats" id="threatStats">
+  <div class="stat-box"><span class="stat-num" id="feedCount">—</span><span class="stat-label">URLs in Feed</span></div>
+  <div class="stat-box danger-stat"><span class="stat-num" id="feedSource">OpenPhish</span><span class="stat-label">Data Source</span></div>
+  <div class="stat-box"><span class="stat-num" id="feedUpdated">—</span><span class="stat-label">Last Updated</span></div>
+  <div class="stat-box"><span class="stat-num" id="feedStatus">Loading</span><span class="stat-label">Feed Status</span></div>
+</div>
+
+<div class="section-block">
+  <div class="section-head">
+    <h2>Active Phishing URLs</h2>
+    <div style="display:flex;gap:8px;align-items:center;">
+      <input type="text" id="threatSearch" placeholder="Search URLs..." class="search-input" oninput="filterThreats(this.value)">
+    </div>
+  </div>
+
+  <div id="feedLoading" class="feed-loading">
+    <div class="scan-anim" style="width:48px;height:48px;margin:0 auto 16px;">
+      <div class="ring"></div><div class="ring r2"></div><div class="ring r3"></div>
+    </div>
+    <p style="color:var(--muted);font-size:13px;">Fetching live threat data...</p>
+  </div>
+
+  <div id="feedError" class="feed-error" style="display:none;">
+    <p>⚠ Could not reach live feed. Showing sample data.</p>
+  </div>
+
+  <div class="history-table-wrap" id="feedTableWrap" style="display:none;">
+    <table class="history-table">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Phishing URL</th>
+          <th>Source</th>
+          <th>Type</th>
+          <th>Date</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody id="feedBody"></tbody>
+    </table>
+  </div>
+</div>
+
+<div class="info-cards">
+  <div class="info-card">
+    <div class="info-icon">🌐</div>
+    <h3>OpenPhish</h3>
+    <p>Community-driven phishing intelligence platform that tracks and reports active phishing URLs globally in real-time.</p>
+  </div>
+  <div class="info-card">
+    <div class="info-icon">🔄</div>
+    <h3>Auto-refreshed</h3>
+    <p>Feed refreshes automatically every 5 minutes. Click Refresh to fetch the latest threats immediately.</p>
+  </div>
+  <div class="info-card">
+    <div class="info-icon">🔍</div>
+    <h3>Scan any threat</h3>
+    <p>Click "Scan" next to any URL to run it through the PhishGuard ML model for a detailed feature analysis.</p>
+  </div>
+</div>
+
+<script>
+let allThreats = [];
+
+function filterThreats(q) {
+  const rows = document.querySelectorAll('.threat-row');
+  rows.forEach(r => {
+    r.style.display = r.dataset.url.toLowerCase().includes(q.toLowerCase()) ? '' : 'none';
+  });
+}
+
+function loadFeed() {
+  document.getElementById('feedLoading').style.display = 'block';
+  document.getElementById('feedTableWrap').style.display = 'none';
+  document.getElementById('feedError').style.display = 'none';
+  document.getElementById('feedStatus').textContent = 'Loading';
+
+  fetch('/api/threats')
+    .then(r => r.json())
+    .then(data => {
+      allThreats = data.feed;
+      document.getElementById('feedCount').textContent = data.count;
+      document.getElementById('feedUpdated').textContent = new Date().toLocaleTimeString();
+      document.getElementById('feedStatus').textContent = data.status === 'fallback' ? 'Sample' : 'Live';
+      if (data.status === 'fallback') document.getElementById('feedError').style.display = 'block';
+
+      const tbody = document.getElementById('feedBody');
+      tbody.innerHTML = '';
+      data.feed.forEach((item, i) => {
+        const tr = document.createElement('tr');
+        tr.className = 'threat-row';
+        tr.dataset.url = item.url;
+        tr.innerHTML = `
+          <td class="td-id">${i+1}</td>
+          <td class="td-url threat-url" title="${item.url}">${item.url}</td>
+          <td><span class="result-pill pill-neutral" style="font-size:10px;">${item.source}</span></td>
+          <td><span class="result-pill pill-danger">☠ ${item.type}</span></td>
+          <td class="td-ts">${item.timestamp}</td>
+          <td>
+            <form method="POST" action="/predict" style="display:inline;">
+              <input type="hidden" name="url" value="${item.url}">
+              <button type="submit" class="export-btn">Scan →</button>
+            </form>
+          </td>`;
+        tbody.appendChild(tr);
+      });
+
+      document.getElementById('feedLoading').style.display = 'none';
+      document.getElementById('feedTableWrap').style.display = 'block';
+    })
+    .catch(() => {
+      document.getElementById('feedLoading').style.display = 'none';
+      document.getElementById('feedError').style.display = 'block';
+      document.getElementById('feedStatus').textContent = 'Error';
+    });
+}
+
+loadFeed();
+setInterval(loadFeed, 300000);
+</script>
+{% endblock %}
