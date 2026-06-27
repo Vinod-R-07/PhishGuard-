@@ -110,6 +110,7 @@ Content-Type: application/json
 ---
 
 ## Project Structure
+```text
 PhishGuard/
 ├── app.py                  # Flask application and routes
 ├── feature_extractor.py    # 30 feature extraction logic
@@ -120,6 +121,7 @@ PhishGuard/
 ├── templates/              # HTML pages
 └── static/
 └── style.css           # Stylesheet
+```
 
 ---
 
